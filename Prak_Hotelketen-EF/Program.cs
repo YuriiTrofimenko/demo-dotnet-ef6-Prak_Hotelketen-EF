@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using HK.BL.Domain;
 using HK.DAL;
+using Microsoft.EntityFrameworkCore;
 
 namespace HK.UI.CA
 {
@@ -9,9 +10,25 @@ namespace HK.UI.CA
     {
         static void Main(string[] args)
         {
-            IRepository repo = new Repository();
-            Program program = new Program(repo);
-            program.Run();
+            bool shouldDropCreate = false;
+            foreach (var arg in args)
+            {
+                if (arg == "drop-create")
+                {
+                    shouldDropCreate = true;
+                }
+            }
+            using (HotelDbContext ctx =
+                new HotelDbContext(
+                    new DbContextOptionsBuilder()
+                        .UseSqlite("Data Source=Hotel_EF.db").Options
+                ))
+            {
+                HotelDbInitializer.Initialize(ctx, shouldDropCreate);
+                IRepository repo = new Repository();
+                Program program = new Program(repo);
+                program.Run();
+            }
         }
 
         private bool _quit = false;
